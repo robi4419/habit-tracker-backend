@@ -13,10 +13,17 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+const allowedOrigins = process.env.CLIENT_URLS.split(","); // "https://a.com,https://b.com"
 
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true,
     exposedHeaders: [
       "RateLimit-Reset",
@@ -25,6 +32,7 @@ app.use(
     ],
   }),
 );
+
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

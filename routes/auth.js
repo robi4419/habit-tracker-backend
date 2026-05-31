@@ -9,6 +9,8 @@ import { validateEmail, validatePassword } from "../utils/validators.js";
 
 const router = express.Router();
 
+const isMobileClient = (req) => req.headers["x-client-type"] === "mobile";
+
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 10, // max 10 attempts per IP in that window
@@ -70,6 +72,7 @@ router.post("/register", async (req, res) => {
       })
       .json({
         accessToken,
+        ...(isMobileClient(req) && { refreshToken }),
         user: {
           id: user.id,
           email: user.email,
@@ -116,6 +119,7 @@ router.post("/login", loginLimiter, async (req, res) => {
     })
     .json({
       accessToken,
+      ...(isMobileClient(req) && { refreshToken }),
       user: {
         id: user.id,
         email: user.email,
@@ -124,7 +128,8 @@ router.post("/login", loginLimiter, async (req, res) => {
 });
 
 router.post("/refresh", async (req, res) => {
-  const token = req.cookies.refreshToken;
+  const token = req.cookies.refreshToken ?? req.body.refreshToken;
+
   if (!token) throw new AppError("Missing refresh token", 401);
 
   const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
@@ -153,6 +158,7 @@ router.post("/refresh", async (req, res) => {
     })
     .json({
       accessToken,
+      ...(isMobileClient(req) && { refreshToken: newRefreshToken }),
       user: {
         id: user.id,
         email: user.email,
@@ -161,7 +167,7 @@ router.post("/refresh", async (req, res) => {
 });
 
 router.post("/logout", async (req, res) => {
-  const token = req.cookies.refreshToken;
+  const token = req.cookies.refreshToken ?? req.body.refreshToken;
   if (token) {
     try {
       const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);

@@ -4,6 +4,9 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 import habitsRouter from "./routes/habits.js";
 import entriesRouter from "./routes/entries.js";
+import exercisesRouter from "./routes/exercises.js";
+import sessionsRouter from "./routes/sessions.js";
+import templatesRouter from "./routes/templates.js";
 import authRouter from "./routes/auth.js";
 import authenticate from "./middleware/auth.js";
 import cookieParser from "cookie-parser";
@@ -39,7 +42,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
 app.use("/api/auth", authRouter);
-app.use("/api", authenticate, habitsRouter, entriesRouter);
+app.use("/api", authenticate, habitsRouter, entriesRouter, exercisesRouter, sessionsRouter, templatesRouter);
 app.use(errorHandler);
 
 app.listen(port, () => {
